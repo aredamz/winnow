@@ -1,0 +1,63 @@
+{
+ "findings": [
+  {
+   "path": "shop/pricing.py",
+   "start_line": 52,
+   "end_line": 54,
+   "severity": "critical",
+   "category": "bug",
+   "title": "Discount math wrong: returns price * percent",
+   "explanation": "Discount formula is inverted. Old code computed amount * (1 - pct/100). New code returns amount * rate, so percent=10 turns $100 into $1000 instead of $90. Percent=100 returns full price squared scale, percent=0 returns 0.",
+   "evidence": [
+    {
+     "path": "shop/pricing.py",
+     "start_line": 54,
+     "end_line": 54,
+     "why": "Returns amount * rate instead of amount * (1 - rate/100); e.g. 10% off 100 returns 1000."
+    }
+   ],
+   "suggestion": "Restore: pct = Decimal(str(percent)); return quantize(amount * (1 - pct / 100))",
+   "confidence": 1.0
+  },
+  {
+   "path": "shop/pricing.py",
+   "start_line": 52,
+   "end_line": 54,
+   "severity": "high",
+   "category": "bug",
+   "title": "Float money math breaks Decimal contract and cents rounding",
+   "explanation": "Replaces to_money/Decimal/quantize with float. Breaks documented Decimal return rounded to cents and introduces binary floating-point errors for money. Callers expecting Decimal will break.",
+   "evidence": [
+    {
+     "path": "shop/pricing.py",
+     "start_line": 52,
+     "end_line": 53,
+     "why": "Converts money to float and returns float, dropping to_money, Decimal, and quantize to cents."
+    }
+   ],
+   "suggestion": "Use amount = to_money(price); pct = Decimal(str(percent)); return quantize(amount * (1 - pct/100))",
+   "confidence": 0.95
+  },
+  {
+   "path": "shop/pricing.py",
+   "start_line": 52,
+   "end_line": 54,
+   "severity": "medium",
+   "category": "bug",
+   "title": "Removed 0-100 percent validation allows invalid discounts",
+   "explanation": "Removed pct <0 or pct >100 ValueError guard. Now percent=-50 or 200 is accepted, yielding negative totals or large overcharges with no error.",
+   "evidence": [
+    {
+     "path": "shop/pricing.py",
+     "start_line": 52,
+     "end_line": 54,
+     "why": "No 0-100 range check remains; negative or >100 percents produce negative or inflated prices."
+    }
+   ],
+   "suggestion": "Re-add: if pct < 0 or pct > 100: raise ValueError(f\"percent out of range 0-100: {percent!r}\")",
+   "confidence": 0.95
+  }
+ ],
+ "cost": 0.0094,
+ "latency": 13.12017724999896
+}

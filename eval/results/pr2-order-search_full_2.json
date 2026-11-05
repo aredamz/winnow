@@ -1,0 +1,124 @@
+{
+ "findings": [
+  {
+   "path": "shop/orders.py",
+   "start_line": 57,
+   "end_line": 62,
+   "severity": "critical",
+   "category": "security",
+   "title": "SQL injection via f-string in search_orders_advanced",
+   "explanation": "search_orders_advanced formats user input with f\"...'%{query}%'\" instead of parameterisation. Attacker via /orders/search2?q= can break out e.g. `' OR '1'='1` to dump all rows or UNION/quote-escape. Existing search_orders is parameterised, so this regresses the contract.",
+   "evidence": [
+    {
+     "path": "shop/orders.py",
+     "start_line": 57,
+     "end_line": 62,
+     "why": "f-string interpolates query directly into LIKE clause"
+    },
+    {
+     "path": "shop/orders.py",
+     "start_line": 38,
+     "end_line": 45,
+     "why": "existing search_orders shows correct parameterized pattern"
+    },
+    {
+     "path": "api/routes.py",
+     "start_line": 57,
+     "end_line": 60,
+     "why": "new route exposes vulnerable function via q param"
+    }
+   ],
+   "suggestion": "Use parameterized query: WHERE status LIKE ? with (f\"%{query}%\",) instead of f-string interpolation.",
+   "confidence": 0.95,
+   "agent": "security-reviewer",
+   "verdict": "keep",
+   "verifier_note": "Confirmed f-string SQL interpolation exposed via q param; parameterized pattern exists nearby."
+  },
+  {
+   "path": "shop/uploads.py",
+   "start_line": 1,
+   "end_line": 6,
+   "severity": "critical",
+   "category": "security",
+   "title": "Hardcoded AWS secret key in source",
+   "explanation": "New module embeds RECEIPT_AWS_KEY directly in source. Hardcoded cloud credentials are committed to git, leaked to all clones and break secret rotation.",
+   "evidence": [
+    {
+     "path": "shop/uploads.py",
+     "start_line": 5,
+     "end_line": 6,
+     "why": "Hardcoded credential and bucket defined in new module"
+    },
+    {
+     "path": "shop/uploads.py",
+     "start_line": 5,
+     "end_line": 5,
+     "why": "Defines hardcoded cloud credential in new file"
+    }
+   ],
+   "suggestion": "Remove hardcoded key from source; load from env or secret store and rotate if committed.",
+   "confidence": 0.6,
+   "agent": "secret-reviewer",
+   "verdict": "keep",
+   "verifier_note": "Location is real new file with concrete fix; per policy keep with moderated confidence."
+  },
+  {
+   "path": "api/routes.py",
+   "start_line": 57,
+   "end_line": 60,
+   "severity": "high",
+   "category": "security",
+   "title": "Unauthenticated cross-user order search exposes all users",
+   "explanation": "orders_search2 drops require_user/User dependency used by orders_search/orders and calls search_orders_advanced which queries all users. Any unauthenticated caller can enumerate all orders' status across users, bypassing per-user isolation.",
+   "evidence": [
+    {
+     "path": "api/routes.py",
+     "start_line": 57,
+     "end_line": 60,
+     "why": "new route takes only q with no user auth dependency"
+    },
+    {
+     "path": "api/routes.py",
+     "start_line": 52,
+     "end_line": 53,
+     "why": "existing orders_search correctly requires user scoping"
+    },
+    {
+     "path": "shop/orders.py",
+     "start_line": 57,
+     "end_line": 62,
+     "why": "called function docstring says across all users orders"
+    }
+   ],
+   "suggestion": "Add User auth dependency and scope query by user, or remove cross-user endpoint.",
+   "confidence": 0.9,
+   "agent": "security-reviewer",
+   "verdict": "keep",
+   "verifier_note": "Confirmed missing User dependency and cross-user query; breaks per-route auth convention."
+  },
+  {
+   "path": "shop/uploads.py",
+   "start_line": 9,
+   "end_line": 11,
+   "severity": "high",
+   "category": "bug",
+   "title": "upload_receipt ignores body and never uploads",
+   "explanation": "upload_receipt claims to upload but ignores body and performs no I/O, just returns a string. Callers expecting persistence will silently lose receipts.",
+   "evidence": [
+    {
+     "path": "shop/uploads.py",
+     "start_line": 9,
+     "end_line": 11,
+     "why": "upload_receipt takes body but only formats key, never uploads"
+    }
+   ],
+   "suggestion": "Implement actual storage upload using body, or rename and document as key formatter.",
+   "confidence": 0.85,
+   "agent": "bug-reviewer",
+   "verdict": "keep",
+   "verifier_note": "Confirmed body unused and no I/O; misleading stub introduced by this diff."
+  }
+ ],
+ "cost": 0.2095,
+ "latency": 112.37140745799843
+}

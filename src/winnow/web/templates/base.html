@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }} · Winnow</title>
+<style>
+body { font-family: system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; color: #111; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ddd; padding: 0.4rem 0.6rem; text-align: left; font-size: 0.9rem; }
+tr.running td { background: #fffbe6; }
+.lane { border: 1px solid #ddd; border-radius: 6px; padding: 0.6rem; margin: 0.5rem 0; }
+.mono { font-family: ui-monospace, monospace; font-size: 0.85rem; }
+.dim { color: #666; }
+</style>
+</head>
+<body>
+<h1>Winnow</h1>
+{% block content %}{% endblock %}
+<hr>
+<p class="dim">An autonomous review-and-docs crew, built with Muse Spark.</p>
+</body>
+</html>

@@ -1,0 +1,63 @@
+{
+ "findings": [
+  {
+   "path": "shop/pricing.py",
+   "start_line": 52,
+   "end_line": 54,
+   "severity": "critical",
+   "category": "bug",
+   "title": "Discount formula returns price * percent instead of discounted price",
+   "explanation": "New code computes `amount * rate` where rate is raw percent (e.g. 10). Correct is amount*(1-pct/100). So 10% off $100 returns 1000.0 instead of $90.00. Breaks all pricing.",
+   "evidence": [
+    {
+     "path": "shop/pricing.py",
+     "start_line": 52,
+     "end_line": 54,
+     "why": "New return multiplies price by raw percent instead of (1-pct/100)."
+    }
+   ],
+   "suggestion": "Restore Decimal logic: amount=to_money(price); pct=Decimal(str(percent)); validate 0-100; return quantize(amount*(1-pct/100)).",
+   "confidence": 1.0
+  },
+  {
+   "path": "shop/pricing.py",
+   "start_line": 52,
+   "end_line": 53,
+   "severity": "high",
+   "category": "bug",
+   "title": "Float conversion breaks Decimal money handling and cent rounding",
+   "explanation": "Switch from to_money/Decimal/quantize to float changes return type from Decimal to float, introduces binary floating-point error for money, and stops rounding to cents, violating docstring Returns Discounted amount as Decimal, rounded to cents.",
+   "evidence": [
+    {
+     "path": "shop/pricing.py",
+     "start_line": 52,
+     "end_line": 53,
+     "why": "float() replaces to_money/Decimal/quantize, changing return type and precision."
+    }
+   ],
+   "suggestion": "Keep Decimal arithmetic and quantize to cents; avoid float for money.",
+   "confidence": 0.95
+  },
+  {
+   "path": "shop/pricing.py",
+   "start_line": 52,
+   "end_line": 54,
+   "severity": "medium",
+   "category": "bug",
+   "title": "Removed 0-100 percent range validation allows invalid discounts",
+   "explanation": "Removed pct<0 or pct>100 ValueError allows negative or >100% discounts, producing negative totals or price increases with no error.",
+   "evidence": [
+    {
+     "path": "shop/pricing.py",
+     "start_line": 52,
+     "end_line": 54,
+     "why": "Replacement deletes pct <0 or >100 ValueError with no equivalent check."
+    }
+   ],
+   "suggestion": "Re-add range check raising ValueError for percent outside 0-100.",
+   "confidence": 1.0
+  }
+ ],
+ "cost": 0.01,
+ "latency": 10.861772166994342
+}

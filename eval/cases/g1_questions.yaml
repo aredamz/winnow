@@ -1,0 +1,28 @@
+# G1 gate (PLAN.md F1): 5/5 questions answered with correct file citations.
+# Run: uv run winnow index <demo> && for each q: uv run winnow ask <demo> "q"
+# Reference answers live in the demo repo source of truth, not here.
+
+- id: G1-01
+  question: "How is a discount calculated? Percent or fraction, float or Decimal?"
+  must_cite:
+    - shop/pricing.py
+
+- id: G1-02
+  question: "Which code outside shop/pricing.py calls apply_discount, and what would break if its return contract changed?"
+  must_cite:
+    - billing/invoice.py
+
+- id: G1-03
+  question: "How are orders searched, and is the search safe against SQL injection?"
+  must_cite:
+    - shop/orders.py
+
+- id: G1-04
+  question: "Which API routes exist, and how is authentication enforced on them?"
+  must_cite:
+    - api/routes.py
+
+- id: G1-05
+  question: "When is shipping free, exactly at the threshold?"
+  must_cite:
+    - shop/shipping.py

@@ -1,0 +1,25 @@
+{
+ "findings": [
+  {
+   "path": "shop/shipping.py",
+   "start_line": 12,
+   "end_line": 17,
+   "severity": "medium",
+   "category": "bug",
+   "title": "Off-by-one: free shipping threshold changed from >= to >",
+   "explanation": "Changes free-shipping boundary from inclusive (>=) to exclusive (>). A subtotal exactly equal to FREE_SHIPPING_THRESHOLD (50.00) now incorrectly incurs FLAT_FEE, contradicting original spec.",
+   "evidence": [
+    {
+     "path": "shop/shipping.py",
+     "start_line": 13,
+     "end_line": 15,
+     "why": "Changed inclusive >= check to exclusive > so $50.00 no longer gets free shipping."
+    }
+   ],
+   "suggestion": "Restore inclusive check: `if subtotal >= FREE_SHIPPING_THRESHOLD:` and update docstring to (>=).",
+   "confidence": 0.95
+  }
+ ],
+ "cost": 0.0077,
+ "latency": 13.069417416998476
+}

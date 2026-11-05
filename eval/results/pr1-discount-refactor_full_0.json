@@ -1,0 +1,48 @@
+{
+ "findings": [
+  {
+   "path": "shop/pricing.py",
+   "start_line": 52,
+   "end_line": 54,
+   "severity": "critical",
+   "category": "bug",
+   "title": "apply_discount multiplies by percent instead of discounting",
+   "explanation": "New body computes amount*rate instead of amount*(1-pct/100), returns float not Decimal, drops quantize and range check. Breaks percent contract relied on by Cart.apply_discount, Cart.total and other callers. E.g. 10% off 100 returns 1000.0 instead of Decimal 90.00.",
+   "evidence": [
+    {
+     "path": "shop/pricing.py",
+     "start_line": 52,
+     "end_line": 54,
+     "why": "These lines show float(price)*float(percent) with no discount formula, Decimal, or quantize."
+    }
+   ],
+   "suggestion": "Restore Decimal implementation: amount = to_money(price); pct = Decimal(str(percent)); validate 0-100; return quantize(amount * (1 - pct / 100)).",
+   "confidence": 0.95,
+   "agent": "reviewer",
+   "verdict": "keep",
+   "verifier_note": "Confirmed in current file and diff: correct logic removed and replaced with float multiply, introduced by this diff and actionable."
+  },
+  {
+   "path": "shop/pricing.py",
+   "start_line": 46,
+   "end_line": 54,
+   "severity": "high",
+   "category": "docs",
+   "title": "Update apply_discount docstring for float multiply behavior",
+   "explanation": "Body changed from Decimal percentage discount with 0-100 validation and quantize (amount * (1 - pct/100)) to float multiplication (float(price) * float(percent)) with no validation or rounding, returning float. Docstring still claims percentage discount returning Decimal rounded to cents, so it no longer matches.",
+   "evidence": [
+    {
+     "path": "shop/pricing.py",
+     "start_line": 46,
+     "end_line": 54,
+     "why": "New body returns float(price) * float(percent) with no validation, contradicting Decimal percentage docstring."
+    }
+   ],
+   "suggestion": "\"\"\"Multiply price by rate using float.\n\n    Args:\n        price: Original amount.\n        percent: Multiplier rate.\n\n    Returns:\n        Product as float with no validation or rounding.\n    \"\"\"",
+   "confidence": 0.98,
+   "agent": "docs"
+  }
+ ],
+ "cost": 0.0638,
+ "latency": 59.26813383300032
+}

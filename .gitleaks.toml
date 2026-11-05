@@ -1,0 +1,4 @@
+# Gitleaks config: extend default rules; test-fixture fakes use inline
+# `# gitleaks:allow` comments (see tests/unit/test_security.py).
+[extend]
+useDefault = true

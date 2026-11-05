@@ -1,0 +1,48 @@
+{
+ "findings": [
+  {
+   "path": "shop/pricing.py",
+   "start_line": 52,
+   "end_line": 54,
+   "severity": "critical",
+   "category": "bug",
+   "title": "apply_discount returns price*percent float instead of discounted Decimal",
+   "explanation": "New body `float(price)*float(percent)` breaks percent semantics: 10% off 100 becomes 1000.0 not 90.00, returns float not Decimal, drops quantize and range check. Breaks callers expecting Decimal percent-off.",
+   "evidence": [
+    {
+     "path": "shop/pricing.py",
+     "start_line": 52,
+     "end_line": 54,
+     "why": "New body uses float amount*rate instead of Decimal percent-off with quantize and validation."
+    }
+   ],
+   "suggestion": "Restore Decimal logic: to_money(price), Decimal(str(percent)) with 0-100 check and return quantize(amount*(1-pct/100)).",
+   "confidence": 0.95,
+   "agent": "reviewer",
+   "verdict": "keep",
+   "verifier_note": "Verified via read_file: buggy float multiply replaces correct Decimal logic from diff."
+  },
+  {
+   "path": "shop/pricing.py",
+   "start_line": 47,
+   "end_line": 53,
+   "severity": "high",
+   "category": "docs",
+   "title": "Update apply_discount docstring for float behavior",
+   "explanation": "Body changed from Decimal percentage discount with 0-100 validation and quantize to float multiplication, while docstring still claims percentage discount returning Decimal rounded to cents.",
+   "evidence": [
+    {
+     "path": "shop/pricing.py",
+     "start_line": 51,
+     "end_line": 54,
+     "why": "New body uses float(price), float(percent) and returns amount * rate with no validation."
+    }
+   ],
+   "suggestion": "\"\"\"Multiply price by rate using float.\n\n    Args:\n        price: Original amount.\n        percent: Multiplier rate.\n\n    Returns:\n        Product as float, without validation or cent rounding.\n    \"\"\"",
+   "confidence": 0.95,
+   "agent": "docs"
+  }
+ ],
+ "cost": 0.0618,
+ "latency": 78.69741320799949
+}

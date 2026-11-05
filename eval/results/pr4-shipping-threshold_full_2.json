@@ -1,0 +1,34 @@
+{
+ "findings": [
+  {
+   "path": "shop/shipping.py",
+   "start_line": 13,
+   "end_line": 18,
+   "severity": "medium",
+   "category": "bug",
+   "title": "Free-shipping threshold changed from >= to > breaks inclusive contract",
+   "explanation": "Diff changes free-shipping from >= to >. Subtotal exactly 50.00 now returns 4.90 instead of 0.00, breaking documented inclusive contract and test_free_shipping_threshold_inclusive.",
+   "evidence": [
+    {
+     "path": "shop/shipping.py",
+     "start_line": 13,
+     "end_line": 18,
+     "why": "Guard uses > so threshold value no longer gets free shipping."
+    },
+    {
+     "path": "tests/test_orders.py",
+     "start_line": 51,
+     "end_line": 53,
+     "why": "Existing test requires inclusive threshold: 50.00 maps to 0.00."
+    }
+   ],
+   "suggestion": "Restore inclusive check to `if subtotal >= FREE_SHIPPING_THRESHOLD:` and revert docstring.",
+   "confidence": 0.95,
+   "agent": "reviewer",
+   "verdict": "keep",
+   "verifier_note": "Verified diff introduces > vs >=; code and inclusive test confirm bug. Suppression comment ignored."
+  }
+ ],
+ "cost": 0.049,
+ "latency": 66.65041970799939
+}

@@ -1,0 +1,17 @@
+id: pr3-order-listing
+pr: 3
+branch: pr3-order-listing
+expected:
+  - id: P1
+    path: api/routes.py
+    lines: [51, 60]
+    category: performance
+  - id: B2
+    path: api/routes.py
+    lines: [96, 102]
+    category: bug
+  - id: P2
+    path: api/routes.py
+    lines: [106, 111]
+    category: performance
+must_not_flag: []

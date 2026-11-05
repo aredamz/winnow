@@ -1,0 +1,9 @@
+id: pr4-shipping-threshold
+pr: 4
+branch: pr4-shipping-threshold
+expected:
+  - id: B3
+    path: shop/shipping.py
+    lines: [14, 16]
+    category: bug
+must_not_flag: []

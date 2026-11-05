@@ -1,0 +1,63 @@
+{
+ "findings": [
+  {
+   "path": "shop/pricing.py",
+   "start_line": 52,
+   "end_line": 54,
+   "severity": "critical",
+   "category": "bug",
+   "title": "Discount formula inverted multiplies price by percent",
+   "explanation": "New implementation does `amount * rate` where rate is percent e.g. 10. For price 100 and 10% off this returns 1000 instead of 90. Correct is `amount * (1 - pct/100)`. Logic is inverted and missing /100 scaling.",
+   "evidence": [
+    {
+     "path": "shop/pricing.py",
+     "start_line": 52,
+     "end_line": 54,
+     "why": "New code returns amount * rate instead of discounted amount"
+    }
+   ],
+   "suggestion": "Restore: pct=Decimal(str(percent)); return quantize(amount * (1 - pct/100))",
+   "confidence": 1.0
+  },
+  {
+   "path": "shop/pricing.py",
+   "start_line": 52,
+   "end_line": 54,
+   "severity": "high",
+   "category": "bug",
+   "title": "Float conversion loses money precision and Decimal type",
+   "explanation": "Replaces to_money/Decimal/quantize with float(). This breaks Decimal return contract, loses cents rounding, and introduces binary float errors for money. e.g. 0.1+0.2 style errors in pricing.",
+   "evidence": [
+    {
+     "path": "shop/pricing.py",
+     "start_line": 52,
+     "end_line": 54,
+     "why": "Uses float() and returns float, drops to_money and quantize"
+    }
+   ],
+   "suggestion": "Restore to_money(price) and quantize() and return Decimal.",
+   "confidence": 0.95
+  },
+  {
+   "path": "shop/pricing.py",
+   "start_line": 52,
+   "end_line": 54,
+   "severity": "medium",
+   "category": "bug",
+   "title": "Removed percent range validation allows invalid discounts",
+   "explanation": "Removed ValueError for percent out of 0-100. Now negative or >100 percents silently produce nonsense e.g. -10 gives negative total, 200 gives 2x price, previously rejected.",
+   "evidence": [
+    {
+     "path": "shop/pricing.py",
+     "start_line": 52,
+     "end_line": 54,
+     "why": "Range check pct<0 or pct>100 was deleted with no replacement"
+    }
+   ],
+   "suggestion": "Re-add: if pct<0 or pct>100: raise ValueError",
+   "confidence": 0.95
+  }
+ ],
+ "cost": 0.0078,
+ "latency": 11.134285958003602
+}

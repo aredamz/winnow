@@ -1,0 +1,112 @@
+{
+ "findings": [
+  {
+   "path": "api/routes.py",
+   "start_line": 96,
+   "end_line": 101,
+   "severity": "critical",
+   "category": "bug",
+   "title": "reserve_fast missing await on reserve_stock",
+   "explanation": "reserve_stock is async and must be awaited. Without await, ok is a coroutine which is always truthy, so insufficient-stock check never fires and stock is never decremented, allowing oversell.",
+   "evidence": [
+    {
+     "path": "api/routes.py",
+     "start_line": 96,
+     "end_line": 101,
+     "why": "reserve_fast calls reserve_stock without await so ok is a coroutine"
+    },
+    {
+     "path": "shop/inventory.py",
+     "start_line": 19,
+     "end_line": 27,
+     "why": "reserve_stock is async def returning bool and must be awaited"
+    }
+   ],
+   "suggestion": "Add await: ok = await reserve_stock(sku, quantity).",
+   "confidence": 0.95,
+   "agent": "code-reviewer",
+   "verdict": "keep",
+   "verifier_note": "Verified missing await vs async def; new code in diff, truthy coroutine breaks 409 check."
+  },
+  {
+   "path": "api/routes.py",
+   "start_line": 51,
+   "end_line": 58,
+   "severity": "high",
+   "category": "performance",
+   "title": "N+1 queries in /orders/details",
+   "explanation": "New /orders/details does 1 query for list_orders() then 1 additional SELECT per order inside the loop. Query count is 1+N and grows with order count instead of a single batched fetch.",
+   "evidence": [
+    {
+     "path": "api/routes.py",
+     "start_line": 52,
+     "end_line": 58,
+     "why": "New loop calls db.items_for_order once per order after list_orders"
+    },
+    {
+     "path": "db.py",
+     "start_line": 39,
+     "end_line": 43,
+     "why": "Each items_for_order executes a separate SELECT on order_items"
+    },
+    {
+     "path": "shop/orders.py",
+     "start_line": 30,
+     "end_line": 35,
+     "why": "list_orders executes the initial query returning N orders"
+    }
+   ],
+   "suggestion": "Batch fetch items in one query (e.g. WHERE order_id IN (...) or JOIN) instead of per-order SELECT.",
+   "confidence": 0.9,
+   "agent": "code-reviewer",
+   "verdict": "keep",
+   "verifier_note": "Verified: new endpoint loops list_orders result and issues per-order SELECT; introduced by this diff and fixable by batching."
+  },
+  {
+   "path": "api/routes.py",
+   "start_line": 105,
+   "end_line": 110,
+   "severity": "high",
+   "category": "bug",
+   "title": "blocking requests.get in async endpoint",
+   "explanation": "remote_stock is async but calls blocking requests.get, which blocks the event loop and stalls all other requests until the remote call completes.",
+   "evidence": [
+    {
+     "path": "api/routes.py",
+     "start_line": 105,
+     "end_line": 110,
+     "why": "async endpoint uses blocking requests.get without await"
+    }
+   ],
+   "suggestion": "Use httpx AsyncClient, or make endpoint sync def, or run blocking call in threadpool.",
+   "confidence": 0.9,
+   "agent": "code-reviewer",
+   "verdict": "keep",
+   "verifier_note": "Verified async def with synchronous requests.get; introduced by diff and blocks event loop."
+  },
+  {
+   "path": "api/routes.py",
+   "start_line": 105,
+   "end_line": 110,
+   "severity": "medium",
+   "category": "security",
+   "title": "External HTTP request without timeout can hang",
+   "explanation": "remote_stock performs requests.get to an external URL without a timeout. A slow or hung upstream can block the worker indefinitely, enabling DoS and resource exhaustion.",
+   "evidence": [
+    {
+     "path": "api/routes.py",
+     "start_line": 109,
+     "end_line": 109,
+     "why": "requests.get with f-string URL has no timeout argument"
+    }
+   ],
+   "suggestion": "Add explicit timeout, e.g. requests.get(url, timeout=5).",
+   "confidence": 0.85,
+   "agent": "code-reviewer",
+   "verdict": "keep",
+   "verifier_note": "Verified no timeout arg on external GET; new code in diff, fix is adding timeout."
+  }
+ ],
+ "cost": 0.1803,
+ "latency": 91.43375695800205
+}

@@ -1,0 +1,34 @@
+{
+ "findings": [
+  {
+   "path": "shop/pricing.py",
+   "start_line": 52,
+   "end_line": 54,
+   "severity": "critical",
+   "category": "bug",
+   "title": "apply_discount returns price*percent float instead of percent-off Decimal",
+   "explanation": "Diff replaces Decimal percent-off logic with float(price)*float(percent). E.g. price 100 percent 10 returns 1000.0 instead of Decimal 90.00. Drops 0-100 validation, to_money/quantize, and return-type contract relied on by Cart.total and Invoice.total.",
+   "evidence": [
+    {
+     "path": "shop/pricing.py",
+     "start_line": 52,
+     "end_line": 54,
+     "why": "New body does float(price)*float(percent) returning price times percent as float."
+    },
+    {
+     "path": "shop/pricing.py",
+     "start_line": 42,
+     "end_line": 51,
+     "why": "Docstring requires percent-off Decimal rounded to cents, e.g. 10 means 10% off."
+    }
+   ],
+   "suggestion": "Restore Decimal logic: amount=to_money(price); pct=Decimal(str(percent)); validate 0<=pct<=100; return quantize(amount*(1-pct/100)).",
+   "confidence": 0.95,
+   "agent": "pr-reviewer",
+   "verdict": "keep",
+   "verifier_note": "Verified against file: body is amount*rate float, breaks documented Decimal percent-off contract introduced by this diff."
+  }
+ ],
+ "cost": 0.1045,
+ "latency": 91.80181383399758
+}

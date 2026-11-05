@@ -1,0 +1,84 @@
+{
+ "findings": [
+  {
+   "path": "shop/orders.py",
+   "start_line": 57,
+   "end_line": 62,
+   "severity": "critical",
+   "category": "security",
+   "title": "SQL injection in search_orders_advanced via f-string",
+   "explanation": "search_orders_advanced interpolates attacker-controlled `query` directly into SQL via f-string LIKE '%...%', allowing SQL injection, unlike parameterized search_orders.",
+   "evidence": [
+    {
+     "path": "shop/orders.py",
+     "start_line": 57,
+     "end_line": 62,
+     "why": "Shows f-string building SQL LIKE clause directly from query parameter"
+    },
+    {
+     "path": "api/routes.py",
+     "start_line": 56,
+     "end_line": 60,
+     "why": "Shows new route forwards untrusted q directly to vulnerable function"
+    }
+   ],
+   "suggestion": "Use parameterized query with placeholder, e.g. WHERE status LIKE ? with (f\"%{query}%\",)",
+   "confidence": 0.95,
+   "agent": "reviewer",
+   "verdict": "keep",
+   "verifier_note": "Verified f-string SQL construction and untrusted route input; newly introduced by diff."
+  },
+  {
+   "path": "shop/uploads.py",
+   "start_line": 3,
+   "end_line": 6,
+   "severity": "critical",
+   "category": "security",
+   "title": "Hardcoded AWS key in shop/uploads.py",
+   "explanation": "New file defines hardcoded cloud credential at module scope; it should be removed and loaded from environment or secrets manager.",
+   "evidence": [
+    {
+     "path": "shop/uploads.py",
+     "start_line": 1,
+     "end_line": 6,
+     "why": "Shows new file defines hardcoded credential constant at module scope"
+    }
+   ],
+   "suggestion": "Remove hardcoded key and load from environment variable or secrets manager.",
+   "confidence": 0.65,
+   "agent": "reviewer",
+   "verdict": "keep",
+   "verifier_note": "Real code location with concrete fix; kept per secret policy without validating value."
+  },
+  {
+   "path": "api/routes.py",
+   "start_line": 56,
+   "end_line": 60,
+   "severity": "high",
+   "category": "security",
+   "title": "Unauthenticated cross-user order search",
+   "explanation": "orders_search2 takes only q with no User dependency, unlike orders_search/orders, and calls helper documented as across all users, exposing all users orders without auth.",
+   "evidence": [
+    {
+     "path": "api/routes.py",
+     "start_line": 56,
+     "end_line": 60,
+     "why": "Shows new route takes only q with no User auth and returns helper results"
+    },
+    {
+     "path": "shop/orders.py",
+     "start_line": 57,
+     "end_line": 62,
+     "why": "Shows helper queries all users orders with no user filter"
+    }
+   ],
+   "suggestion": "Require authenticated User dependency and scope search to that user like search_orders does.",
+   "confidence": 0.9,
+   "agent": "reviewer",
+   "verdict": "keep",
+   "verifier_note": "Verified missing auth vs adjacent routes and cross-user docstring; newly introduced."
+  }
+ ],
+ "cost": 0.1638,
+ "latency": 74.25897424999857
+}

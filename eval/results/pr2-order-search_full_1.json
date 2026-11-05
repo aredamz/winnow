@@ -1,0 +1,84 @@
+{
+ "findings": [
+  {
+   "path": "shop/orders.py",
+   "start_line": 57,
+   "end_line": 62,
+   "severity": "critical",
+   "category": "security",
+   "title": "SQL injection via f-string in search_orders_advanced",
+   "explanation": "search_orders_advanced builds SQL with f-string interpolation of query, allowing SQL injection. Existing search_orders uses parameterised LIKE; this new function regresses that protection.",
+   "evidence": [
+    {
+     "path": "shop/orders.py",
+     "start_line": 57,
+     "end_line": 62,
+     "why": "f-string interpolates user query directly into SQL LIKE clause"
+    },
+    {
+     "path": "shop/orders.py",
+     "start_line": 59,
+     "end_line": 60,
+     "why": "SQL built with f-string embedding raw query instead of ? placeholder"
+    }
+   ],
+   "suggestion": "Use parameterized query with ? placeholder for LIKE pattern, e.g. WHERE status LIKE ? with (f\"%{query}%\",).",
+   "confidence": 0.95,
+   "agent": "security",
+   "verdict": "keep",
+   "verifier_note": "Confirmed f-string SQL with direct interpolation in new function; parameterized fix is concrete."
+  },
+  {
+   "path": "shop/uploads.py",
+   "start_line": 5,
+   "end_line": 5,
+   "severity": "critical",
+   "category": "security",
+   "title": "Hardcoded AWS key in shop/uploads.py",
+   "explanation": "New module commits an AWS access key as a source-code constant. Any clone or leak exposes the credential and prevents rotation without code change. Load from environment or secrets manager instead.",
+   "evidence": [
+    {
+     "path": "shop/uploads.py",
+     "start_line": 5,
+     "end_line": 5,
+     "why": "hardcoded credential constant introduced by this diff in new file"
+    }
+   ],
+   "suggestion": "Remove hardcoded key and load from environment or secrets manager.",
+   "confidence": 0.6,
+   "agent": "security",
+   "verdict": "keep",
+   "verifier_note": "Real code location with concrete fix; kept per secret policy with moderated confidence without validating secret value."
+  },
+  {
+   "path": "api/routes.py",
+   "start_line": 56,
+   "end_line": 60,
+   "severity": "high",
+   "category": "security",
+   "title": "Unauthenticated cross-user order disclosure in orders_search2",
+   "explanation": "orders_search2 drops the User dependency used by orders_search/orders and calls search_orders_advanced which has no user_name filter, so any unauthenticated caller can enumerate all users' orders via /orders/search2.",
+   "evidence": [
+    {
+     "path": "api/routes.py",
+     "start_line": 56,
+     "end_line": 60,
+     "why": "endpoint takes only q with no User auth and calls unscoped all-users search"
+    },
+    {
+     "path": "shop/orders.py",
+     "start_line": 57,
+     "end_line": 60,
+     "why": "advanced query has no user_name filter unlike scoped search_orders"
+    }
+   ],
+   "suggestion": "Require User auth on orders_search2 and scope query by user_name like orders_search/search_orders.",
+   "confidence": 0.9,
+   "agent": "security",
+   "verdict": "keep",
+   "verifier_note": "Confirmed new endpoint lacks User and calls unscoped query; cross-user exposure introduced by diff."
+  }
+ ],
+ "cost": 0.1563,
+ "latency": 77.42875995899522
+}

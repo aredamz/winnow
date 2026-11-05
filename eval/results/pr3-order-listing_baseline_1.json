@@ -1,0 +1,88 @@
+{
+ "findings": [
+  {
+   "path": "api/routes.py",
+   "start_line": 96,
+   "end_line": 102,
+   "severity": "critical",
+   "category": "bug",
+   "title": "Missing await on reserve_stock in async reserve_fast",
+   "explanation": "reserve_fast is async but calls reserve_stock without await. The result is a coroutine object which is always truthy, so the 409 insufficient-stock branch never triggers and stock is never actually reserved. Also leaks unawaited coroutine.",
+   "evidence": [
+    {
+     "path": "api/routes.py",
+     "start_line": 99,
+     "end_line": 99,
+     "why": "async function calls reserve_stock without await, unlike reserve() above which uses await."
+    }
+   ],
+   "suggestion": "Change to `ok = await reserve_stock(sku, quantity)`.",
+   "confidence": 0.95
+  },
+  {
+   "path": "api/routes.py",
+   "start_line": 105,
+   "end_line": 110,
+   "severity": "high",
+   "category": "performance",
+   "title": "Blocking requests.get in async handler without timeout",
+   "explanation": "async remote_stock uses blocking requests.get which blocks the event loop for all concurrent requests. No timeout means it can hang indefinitely, and no error handling for network failures.",
+   "evidence": [
+    {
+     "path": "api/routes.py",
+     "start_line": 109,
+     "end_line": 109,
+     "why": "Synchronous requests.get with no timeout inside async def blocks event loop."
+    }
+   ],
+   "suggestion": "Use httpx.AsyncClient with timeout, or make handler sync def with timeout and error handling.",
+   "confidence": 0.9
+  },
+  {
+   "path": "api/routes.py",
+   "start_line": 55,
+   "end_line": 62,
+   "severity": "medium",
+   "category": "performance",
+   "title": "N+1 queries in order_details endpoint",
+   "explanation": "order_details fetches orders then queries items_for_order inside a for loop. Latency and DB load grow linearly with order count (N+1). Should batch fetch items for all order ids in one query.",
+   "evidence": [
+    {
+     "path": "api/routes.py",
+     "start_line": 59,
+     "end_line": 60,
+     "why": "Loop issues one db.items_for_order query per order."
+    }
+   ],
+   "suggestion": "Add bulk API like items_for_orders(conn, order_ids) and map results.",
+   "confidence": 0.85
+  },
+  {
+   "path": "api/routes.py",
+   "start_line": 96,
+   "end_line": 105,
+   "severity": "medium",
+   "category": "bug",
+   "title": "Overlapping stock routes shadow each other",
+   "explanation": "/stock/{sku}/reserve-fast and /stock/remote/{sku} overlap: GET/POST to /stock/remote/reserve-fast matches both patterns with different bindings. First-registered route shadows the other, making behavior order-dependent and confusing.",
+   "evidence": [
+    {
+     "path": "api/routes.py",
+     "start_line": 96,
+     "end_line": 96,
+     "why": "Pattern /stock/{sku}/reserve-fast matches /stock/remote/reserve-fast with sku=remote."
+    },
+    {
+     "path": "api/routes.py",
+     "start_line": 105,
+     "end_line": 105,
+     "why": "Pattern /stock/remote/{sku} also matches same URL with sku=reserve-fast."
+    }
+   ],
+   "suggestion": "Avoid param/static overlap, e.g. /stock/by-sku/{sku}/reserve-fast and /stock/remote/{sku}.",
+   "confidence": 0.7
+  }
+ ],
+ "cost": 0.0136,
+ "latency": 18.39340741700289
+}

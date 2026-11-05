@@ -1,0 +1,69 @@
+{
+ "findings": [
+  {
+   "path": "shop/orders.py",
+   "start_line": 55,
+   "end_line": 60,
+   "severity": "critical",
+   "category": "security",
+   "title": "SQL injection in search_orders_advanced via f-string",
+   "explanation": "User-controlled `query` is interpolated directly into SQL with f\"... LIKE '%{query}%'\", allowing SQL injection to read/modify arbitrary data. Must use bound parameter.",
+   "evidence": [
+    {
+     "path": "shop/orders.py",
+     "start_line": 57,
+     "end_line": 59,
+     "why": "User input interpolated directly into SQL string via f-string"
+    }
+   ],
+   "suggestion": "Use parameterized query: conn.execute(\"SELECT ... WHERE status LIKE ?\", (f\"%{query}%\",)) instead of f-string.",
+   "confidence": 1.0
+  },
+  {
+   "path": "api/routes.py",
+   "start_line": 53,
+   "end_line": 59,
+   "severity": "critical",
+   "category": "security",
+   "title": "Unauthenticated cross-user order search endpoint",
+   "explanation": "New GET /orders/search2 takes only `q` with no `user` and calls search_orders_advanced across all users' orders, unlike existing /orders/search which scopes by user. Exposes other users' orders.",
+   "evidence": [
+    {
+     "path": "api/routes.py",
+     "start_line": 53,
+     "end_line": 58,
+     "why": "New endpoint takes only q with no user auth, unlike scoped search"
+    },
+    {
+     "path": "shop/orders.py",
+     "start_line": 55,
+     "end_line": 56,
+     "why": "Helper explicitly searches across all users orders by status"
+    }
+   ],
+   "suggestion": "Require authenticated `user` and scope query by user_name, or remove endpoint if not needed.",
+   "confidence": 0.95
+  },
+  {
+   "path": "shop/uploads.py",
+   "start_line": 5,
+   "end_line": 6,
+   "severity": "high",
+   "category": "security",
+   "title": "Hardcoded AWS secret key in source",
+   "explanation": "RECEIPT_AWS_KEY is hardcoded in new uploads module, leaking credential via repo history and builds. Secrets must not live in code.",
+   "evidence": [
+    {
+     "path": "shop/uploads.py",
+     "start_line": 5,
+     "end_line": 5,
+     "why": "AWS secret hardcoded as source constant"
+    }
+   ],
+   "suggestion": "Remove key from source; load from environment/secret manager and rotate exposed credential.",
+   "confidence": 0.95
+  }
+ ],
+ "cost": 0.0096,
+ "latency": 19.07558062500175
+}

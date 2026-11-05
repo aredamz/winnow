@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<p>Every pull request gets a review that understands the whole repository, plus updated documentation, within about a minute — without anyone asking.</p>
+<p><a href="https://github.com/apps/{{ slug }}/installations/new"><strong>Install the GitHub App</strong></a></p>
+{% if latest %}
+<p>Latest run on the demo repo: <a href="/runs/{{ latest }}">run #{{ latest }}</a></p>
+{% endif %}
+<p class="dim"><a href="/runs">All runs</a></p>
+{% endblock %}

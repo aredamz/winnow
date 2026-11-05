@@ -1,0 +1,34 @@
+{
+ "findings": [
+  {
+   "path": "shop/shipping.py",
+   "start_line": 13,
+   "end_line": 18,
+   "severity": "medium",
+   "category": "bug",
+   "title": "Free-shipping threshold off-by-one excludes exact threshold",
+   "explanation": "Diff changes >= to > so subtotal == 50.00 is now charged 4.90. This breaks the documented inclusive contract and fails test_free_shipping_threshold_inclusive which asserts 50.00 is free and 49.99 is charged.",
+   "evidence": [
+    {
+     "path": "shop/shipping.py",
+     "start_line": 13,
+     "end_line": 18,
+     "why": "Changed condition uses > so exact threshold no longer gets free shipping."
+    },
+    {
+     "path": "tests/test_orders.py",
+     "start_line": 51,
+     "end_line": 53,
+     "why": "Test requires shipping_fee(50.00)==0.00, i.e. inclusive threshold."
+    }
+   ],
+   "suggestion": "Restore inclusive check: change `if subtotal > FREE_SHIPPING_THRESHOLD:` back to `>=` to match documented contract.",
+   "confidence": 0.95,
+   "agent": "reviewer",
+   "verdict": "keep",
+   "verifier_note": "Verified code uses > vs documented/tested >=; diff introduced it; suppression comment in code ignored."
+  }
+ ],
+ "cost": 0.0525,
+ "latency": 69.85394537500542
+}

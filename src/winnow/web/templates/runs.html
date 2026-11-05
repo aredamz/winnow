@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Runs</h2>
+<table>
+<tr><th>ID</th><th>Repo</th><th>PR</th><th>Status</th><th>Cost</th><th>Started</th></tr>
+{% for run in runs %}
+<tr class="{{ run.status }}">
+<td><a href="/runs/{{ run.id }}">#{{ run.id }}</a></td>
+<td class="mono">{{ run.repo }}</td>
+<td>{{ run.pr or "-" }}</td>
+<td>{{ run.status }}</td>
+<td>${{ "%.4f"|format(run.cost_usd) }}</td>
+<td class="dim">{{ run.started_at }}</td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

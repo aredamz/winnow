@@ -1,0 +1,63 @@
+{
+ "findings": [
+  {
+   "path": "api/routes.py",
+   "start_line": 96,
+   "end_line": 102,
+   "severity": "critical",
+   "category": "bug",
+   "title": "Missing await on async reserve_stock in reserve_fast",
+   "explanation": "reserve_fast() calls async reserve_stock() without await. The coroutine object is always truthy, so `if not ok` never triggers and insufficient-stock 409 is never raised. The reservation also never actually executes.",
+   "evidence": [
+    {
+     "path": "api/routes.py",
+     "start_line": 96,
+     "end_line": 99,
+     "why": "reserve_stock is awaited in reserve() but not in reserve_fast(), returning a coroutine object."
+    }
+   ],
+   "suggestion": "Change to `ok = await reserve_stock(sku, quantity)`.",
+   "confidence": 0.95
+  },
+  {
+   "path": "api/routes.py",
+   "start_line": 106,
+   "end_line": 111,
+   "severity": "high",
+   "category": "performance",
+   "title": "Blocking requests.get in async remote_stock endpoint",
+   "explanation": "remote_stock() is async but uses blocking requests.get() with no timeout. This blocks the event loop for all requests and can hang indefinitely. Use an async client with timeout or run sync I/O in a thread.",
+   "evidence": [
+    {
+     "path": "api/routes.py",
+     "start_line": 106,
+     "end_line": 110,
+     "why": "async endpoint uses synchronous requests.get, blocking the event loop."
+    }
+   ],
+   "suggestion": "Use httpx.AsyncClient with timeout, e.g. `await client.get(url, timeout=5)`.",
+   "confidence": 0.9
+  },
+  {
+   "path": "api/routes.py",
+   "start_line": 55,
+   "end_line": 62,
+   "severity": "medium",
+   "category": "performance",
+   "title": "N+1 database queries in order_details loop",
+   "explanation": "order_details() loops orders and issues one db.items_for_order() query per order. Latency and DB load grow linearly with order count. Batch-fetch items for all order ids in one query.",
+   "evidence": [
+    {
+     "path": "api/routes.py",
+     "start_line": 55,
+     "end_line": 60,
+     "why": "items_for_order is queried inside per-order loop causing N+1 queries."
+    }
+   ],
+   "suggestion": "Add batch query like `db.items_for_orders(_conn, [o.id for o in orders])` and group in memory.",
+   "confidence": 0.85
+  }
+ ],
+ "cost": 0.0109,
+ "latency": 20.098673041997245
+}

@@ -1,0 +1,13 @@
+# Precision test: pure rename, every caller updated, tests green.
+# Winnow should stay nearly silent (≤1 invalid comment).
+id: pr5-rename
+pr: 5
+branch: pr5-rename-helpers
+expected: []
+must_not_flag:
+  - path: shop/money.py
+  - path: shop/pricing.py
+  - path: shop/orders.py
+  - path: shop/payments.py
+  - path: shop/shipping.py
+  - path: billing/invoice.py

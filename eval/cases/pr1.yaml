@@ -1,0 +1,21 @@
+# Seeded-PR labels for the eval (TESTING.md §5.1, DEMO.md §2).
+# Matching rule (§5.2): same path, line overlap ±3, compatible category;
+# cross_file items additionally require the file named in explanation/evidence.
+id: pr1-discount-refactor
+pr: 1
+branch: pr1-discount-rates
+expected:
+  - id: B1
+    path: shop/pricing.py
+    lines: [52, 54]
+    category: bug
+    cross_file: billing/invoice.py
+  - id: B4
+    path: shop/pricing.py
+    lines: [52, 54]
+    category: bug
+  - id: D1
+    path: shop/pricing.py
+    lines: [43, 51]
+    category: docs
+must_not_flag: []

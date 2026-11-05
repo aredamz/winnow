@@ -1,0 +1,69 @@
+{
+ "findings": [
+  {
+   "path": "shop/orders.py",
+   "start_line": 52,
+   "end_line": 59,
+   "severity": "critical",
+   "category": "security",
+   "title": "SQL injection via f-string in search_orders_advanced",
+   "explanation": "search_orders_advanced builds SQL with f\"... LIKE '%{query}%'\" where query comes from /orders/search2 q param. Attacker can inject e.g. ' OR '1'='1 to bypass filter, exfiltrate or modify data.",
+   "evidence": [
+    {
+     "path": "shop/orders.py",
+     "start_line": 55,
+     "end_line": 56,
+     "why": "User input interpolated directly into SQL via f-string, no parameterization"
+    }
+   ],
+   "suggestion": "Use parameterized query: conn.execute(\"SELECT ... WHERE status LIKE ?\", (f\"%{query}%\",))",
+   "confidence": 1.0
+  },
+  {
+   "path": "api/routes.py",
+   "start_line": 53,
+   "end_line": 58,
+   "severity": "critical",
+   "category": "security",
+   "title": "Unauthenticated cross-user order search exposes all orders",
+   "explanation": "orders_search2 drops the user scoping used by orders_search and calls search_orders_advanced which queries all users' orders. Any caller can enumerate all orders, broken access control.",
+   "evidence": [
+    {
+     "path": "api/routes.py",
+     "start_line": 53,
+     "end_line": 57,
+     "why": "New route takes only q with no User auth, unlike /orders/search"
+    },
+    {
+     "path": "shop/orders.py",
+     "start_line": 53,
+     "end_line": 54,
+     "why": "Function explicitly searches across all users orders by status"
+    }
+   ],
+   "suggestion": "Require authenticated User and scope query by user_name like search_orders does.",
+   "confidence": 0.95
+  },
+  {
+   "path": "shop/uploads.py",
+   "start_line": 5,
+   "end_line": 5,
+   "severity": "high",
+   "category": "security",
+   "title": "Hardcoded AWS secret in source",
+   "explanation": "RECEIPT_AWS_KEY is hardcoded in shop/uploads.py. Committed secrets leak via repo history and are hard to rotate.",
+   "evidence": [
+    {
+     "path": "shop/uploads.py",
+     "start_line": 5,
+     "end_line": 5,
+     "why": "AWS secret assigned as literal in source file"
+    }
+   ],
+   "suggestion": "Remove literal; load from environment or secret manager and never commit.",
+   "confidence": 0.9
+  }
+ ],
+ "cost": 0.0101,
+ "latency": 11.714423291996354
+}

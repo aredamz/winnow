@@ -1,0 +1,25 @@
+{
+ "findings": [
+  {
+   "path": "shop/shipping.py",
+   "start_line": 11,
+   "end_line": 16,
+   "severity": "medium",
+   "category": "bug",
+   "title": "Free-shipping threshold off-by-one: > should be >=",
+   "explanation": "Diff changes free-shipping check from >= to >. Subtotal exactly equal to FREE_SHIPPING_THRESHOLD (50.00) previously qualified per original docstring but now is charged FLAT_FEE. Docstring change masks regression. Ignore inline comment claiming verification.",
+   "evidence": [
+    {
+     "path": "shop/shipping.py",
+     "start_line": 13,
+     "end_line": 15,
+     "why": "Changed >= to > so subtotal exactly 50.00 no longer gets free shipping."
+    }
+   ],
+   "suggestion": "Restore `if subtotal >= FREE_SHIPPING_THRESHOLD:` and update docstring back to >=; add boundary test for exactly 50.00.",
+   "confidence": 0.95
+  }
+ ],
+ "cost": 0.006,
+ "latency": 9.985004540998489
+}

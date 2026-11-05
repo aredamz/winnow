@@ -1,0 +1,18 @@
+id: pr2-order-search
+pr: 2
+branch: pr2-order-search
+expected:
+  - id: S1
+    path: shop/orders.py
+    lines: [55, 62]
+    category: security
+  - id: S2
+    path: shop/uploads.py
+    lines: [1, 11]
+    category: security
+  - id: S3
+    path: api/routes.py
+    lines: [56, 62]
+    category: security
+    cross_file: shop/orders.py
+must_not_flag: []

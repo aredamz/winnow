@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Run #{{ run.id }} <span class="dim">{{ run.repo }} PR {{ run.pr or "-" }} · {{ run.status }}</span></h2>
+<p class="dim">Tokens in {{ run.tokens_in }} (cached {{ run.tokens_cached }}) · out {{ run.tokens_out }} · cost ${{ "%.4f"|format(run.cost_usd) }}</p>
+<div id="lanes">
+{% for step in steps %}
+<div class="lane" data-step="{{ step.id }}">
+<strong>{{ step.agent }}</strong> <span class="dim">{{ step.status }} · {{ step.prompt_version }} · {{ step.effort or "" }}</span><br>
+<span class="mono">in {{ step.tokens_in }} (cached {{ step.tokens_cached }}) · out {{ step.tokens_out }} · ${{ "%.4f"|format(step.cost_usd) }} · {{ step.latency_ms or "-" }} ms</span>
+{% if step.error %}<br><span style="color:red">{{ step.error }}</span>{% endif %}
+</div>
+{% endfor %}
+</div>
+<p class="dim">Live. Raw event stream: <a href="/api/runs/{{ run.id }}/events">SSE</a></p>
+<script>
+(function () {
+  var runId = {{ run.id }};
+  var seen = new Set(Array.from(document.querySelectorAll("[data-step]")).map(function (el) { return el.getAttribute("data-step"); }));
+  var source = new EventSource("/api/runs/" + runId + "/events");
+  source.addEventListener("agent.finished", function (ev) {
+    var data;
+    try { data = JSON.parse(ev.data); } catch (e) { return; }
+    if (data.agent === undefined) return;
+    var lanes = document.getElementById("lanes");
+    var div = document.createElement("div");
+    div.className = "lane";
+    var cost = data.cost_usd !== undefined ? "$" + Number(data.cost_usd).toFixed(4) : "";
+    div.innerHTML = "<strong>" + data.agent + "</strong> <span class='dim'>live</span><br>" +
+      "<span class='mono'>in " + (data.tokens_in || 0) + " (cached " + (data.tokens_cached || 0) + ") · out " +
+      (data.tokens_out || 0) + " · " + cost + "</span>";
+    lanes.appendChild(div);
+  });
+  source.addEventListener("run.finished", function () { source.close(); location.reload(); });
+  source.addEventListener("run.failed", function () { source.close(); location.reload(); });
+})();
+</script>
+{% endblock %}
