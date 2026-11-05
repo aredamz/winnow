@@ -40,11 +40,12 @@ def _run_repo(session, run: Run) -> Repo | None:
 async def list_runs(request: Request, repo: str = "", pr: int = 0):
     session = _sessions_of(request)()
     try:
-        query = session.query(Run).order_by(Run.id.desc()).limit(50)
+        query = session.query(Run)
         if repo:
-            query = query.join(Repo).filter(Repo.full_name == repo)
+            query = query.join(Repo, Run.repo_id == Repo.id).filter(Repo.full_name == repo)
         if pr:
             query = query.filter(Run.pr_number == pr)
+        query = query.order_by(Run.id.desc()).limit(50)
         out = []
         for run in query.all():
             owner = _run_repo(session, run)

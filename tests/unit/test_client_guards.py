@@ -113,3 +113,32 @@ def test_complete_scrubs_secrets_before_transport() -> None:
     sent = captured["blocks"][0]["content"] + captured["system"]
     assert "AKIAIOSFODNN7EXAMPLE" not in sent
     assert "[REDACTED:aws-key]" in sent
+
+
+def test_winnow_prefixed_env_vars_are_all_mapped(monkeypatch, tmp_path) -> None:
+    """Regression: every WINNOW_* name in .env.example must reach its field."""
+    from winnow.config import Settings
+
+    monkeypatch.setenv("WINNOW_MODEL", "test-model")
+    monkeypatch.setenv("WINNOW_LLM_MODE", "replay")
+    monkeypatch.setenv("WINNOW_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("WINNOW_PUBLIC_BASE_URL", "https://example.test")
+    monkeypatch.setenv("WINNOW_PUBLIC_REPOS", "a/b,c/d")
+    monkeypatch.setenv("WINNOW_DAILY_SPEND_USD", "7.5")
+    monkeypatch.setenv("WINNOW_ADMIN_TOKEN", "tok")
+    monkeypatch.setenv("WINNOW_ALLOW_CONTRIBUTOR", "1")
+    monkeypatch.setenv("WINNOW_LOG_PROMPTS", "1")
+    monkeypatch.setenv("WINNOW_LOG_LEVEL", "DEBUG")
+    monkeypatch.setenv("WINNOW_WORKERS", "5")
+    settings = Settings()
+    assert settings.model == "test-model"
+    assert settings.llm_mode == "replay"
+    assert settings.data_dir == tmp_path
+    assert settings.public_base_url == "https://example.test"
+    assert settings.public_repo_allowlist == {"a/b", "c/d"}
+    assert settings.daily_spend_usd == 7.5
+    assert settings.admin_token == "tok"
+    assert settings.allow_contributor is True
+    assert settings.log_prompts is True
+    assert settings.log_level == "DEBUG"
+    assert settings.workers == 5

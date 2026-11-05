@@ -93,3 +93,9 @@ def test_reindex_needs_admin_token(client) -> None:
     assert client.post("/api/repos/1/reindex").status_code == 401
     assert client.post("/api/repos/999/reindex",
                        headers={"Authorization": "Bearer adm"}).status_code == 404
+
+
+def test_api_runs_filters_by_repo_and_pr(client) -> None:
+    rows = client.get("/api/runs", params={"repo": "aredamz/winnow-demo-shop", "pr": 6}).json()
+    assert isinstance(rows, list) and all(r["repo"] == "aredamz/winnow-demo-shop" for r in rows)
+    assert client.get("/api/runs", params={"repo": "a/secret"}).json() == []

@@ -17,8 +17,8 @@ class Settings(BaseSettings):
 
     # Meta Model API
     model_api_key: str = Field(default="", description="Bearer token for https://api.meta.ai/v1")
-    model: str = Field(default="muse-spark-1.3")
-    llm_mode: str = Field(default="live", description="live | record | replay")
+    model: str = Field(default="muse-spark-1.3", validation_alias="WINNOW_MODEL")
+    llm_mode: str = Field(default="live", validation_alias="WINNOW_LLM_MODE")
     allow_contributor: bool = Field(default=False, validation_alias="WINNOW_ALLOW_CONTRIBUTOR")
 
     # GitHub App
@@ -29,13 +29,15 @@ class Settings(BaseSettings):
 
     # Server / storage
     data_dir: Path = Field(default=Path("./data"), validation_alias="WINNOW_DATA_DIR")
-    public_base_url: str = Field(default="http://localhost:8000")
-    public_repos: str = Field(default="", description="Comma-separated allow-list for dashboard")
-    daily_spend_usd: float = Field(default=20.0)
-    admin_token: str = Field(default="")
+    public_base_url: str = Field(
+        default="http://localhost:8000", validation_alias="WINNOW_PUBLIC_BASE_URL"
+    )
+    public_repos: str = Field(default="", validation_alias="WINNOW_PUBLIC_REPOS")
+    daily_spend_usd: float = Field(default=20.0, validation_alias="WINNOW_DAILY_SPEND_USD")
+    admin_token: str = Field(default="", validation_alias="WINNOW_ADMIN_TOKEN")
     log_prompts: bool = Field(default=False, validation_alias="WINNOW_LOG_PROMPTS")
-    log_level: str = Field(default="INFO")
-    workers: int = Field(default=2)
+    log_level: str = Field(default="INFO", validation_alias="WINNOW_LOG_LEVEL")
+    workers: int = Field(default=2, validation_alias="WINNOW_WORKERS")
 
     @property
     def public_repo_allowlist(self) -> set[str]:
